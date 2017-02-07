@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" integrity="sha384-wITovz90syo1dJWVh32uuETPVEtGigN07tkttEqPv+uR2SE/mbQcG7ATL28aI9H0" crossorigin="anonymous">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.9.0/math.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js" integrity="sha384-/y1Nn9+QQAipbNQWU65krzJralCnuOasHncUFXGkdwntGeSvQicrYkiUBwsgUqc1" crossorigin="anonymous"></script>
+  <style>
+    input[type=text] {
+      width: 300px;
+    }
+    input {
+      padding: 6px;
+    }
+    body, html, input {
+      font-family: sans-serif;
+      font-size: 11pt;
+
+    }
+    form {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+<form id="form">
+  <div>
+      <label for="eq">La funzione <span id="fx"></span>:</label>
+      <input type="text" id="eq" value="4 * sin(x) + 5 * cos(x/2)" />
+      L'intervallo di definizione <span id="intervallo"></span>
+      <label for="a">[</label>
+      <input type="number" id="a" value="2" step="0.001" />
+      <label for="b">, </label>
+      <input type="number" id="b" value="4" step="0.001" />]
+  </div>
+  <div>
+    <label for="metodo">Il metodo per cercare <span id="alpha"></span></label>
+    <select name="metodo" id="metodo">
+	  <option value="bisezione" selected>Metodo dicotomico</option>
+	  <option value="Fibonacci">Metodo di Fibonacci</option>
+	  <option value="secanti">Metodo delle secanti</option>
+	  <option value="Newton">Metodo di Newton</option>
+	</select>
+  </div>
+  <div>
+    I criteri di terminazione
+	<div>
+	  <div>
+	    <span id="eps_f"></span><input type="number" id="v_eps_f" value="0.000001" step="0.000001" />
+	  </div>
+	  <div>
+	    <span id="eps_x"></span><input type="number" id="v_eps_x" value="0.000001" step="0.000001" />
+	  </div>
+	  <div>
+	    <span id="iter"></span><input type="number" id="max_iter" value="50" step="1" min="0"/>
+	  </div>
+	</div>
+    
+  </div>  
+  
+  <input type="submit" value="Calcola" />
+</form>
+<script>
+katex.render(
+		'f(x) \\in \\mathcal{C}^0 [a, b],\\ f : x \\mapsto'
+	, document.getElementById('fx'));
+katex.render(
+	'[a, b] \\subset \\mathbb{R} = '
+	, document.getElementById('intervallo'));
+katex.render(
+	'\\alpha \\in [a, b] \\subset \\mathbb{R}\\ |\\ f(\\alpha) = 0'
+	, document.getElementById('alpha'));
+katex.render(
+	'0 \\leq |f(x_k)| \\leq \\varepsilon_f,\\ \\varepsilon_f ='
+	, document.getElementById('eps_f'));
+katex.render(
+	'0 \\leq |x_k - x_{k-1}| \\leq \\varepsilon_x,\\ \\varepsilon_x ='
+	, document.getElementById('eps_x'));
+katex.render(
+	'0 \\leq k \\leq n,\\ n ='
+	, document.getElementById('iter'));
+
+</script>
+
+<div style="width:800px;height:600px;" id="plot"></div>
+
+<table id="dati">
+  <thead>
+    <th>Iterazione</th>
+	<th>x</th>
+	<th>Incertezza</th>
+	<th>f(x)</th>
+	<th>Valutazioni</th>
+  </thead>
+  <tbody id="tab_iter">
+  </tbody>
+</table>
+
+<script>
+  
+  /*
+   * Function evaluation, a-la Matlab
+   */
+  var matrlab = {}; 
+  /* Generate linearly spaced array */
+  matrlab.linspace = function (lower, upper, points) {
+	var ret = new Array(points);
+	ret[0] = lower;
+	var step = (upper - lower) / (points - 1);
+	for (var j = 1; j < points - 1; j++) {
+		ret[j] = ret[j-1] + step;
+	}
+	ret[points-1] = upper;
+	
+	return ret;
+  };
+  
+  /* Evaluate a function in each point of an array */
+  matrlab.evaluate = function (f, xs) {
+	return xs.map(function(x) { 
+	  var scope = { x: x };
+	  return math.eval (f, scope);
+	});
+  };
+  
+  /*
+   *  Drawing functions.
+   */
+  var drawing = {};
+  drawing.draw = function (f, a, b) {
+      const div_id = 'plot';
+	  var x_samples = matrlab.linspace(a, b, 400);
+	  var y_samples = matrlab.evaluate(f, x_samples);
+	  var func_graph = {
+		x: x_samples,
+		y: y_samples,
+		type: 'scatter',
+		name: f
+	  };
+	  var title = "Metodo d";
+	  title += (document.getElementById('metodo').value === "secanti")?"elle secanti":("i " + document.getElementById('metodo').value);
+	  var layout = {
+	  title: title,
+	  font: {
+	    family: 'Arial, sans-serif;',
+		size: 12,
+		color: '#000'
+	  },
+	  showlegend: true,
+//	  width: 480,
+//	  height: 400,
+      margin: {
+		l: 40,
+		r: 40,
+		b: 20,
+		t: 40,
+		pad: 0
+      },
+	  paper_bgcolor: 'rgb(255, 255, 255)',
+	  plot_bgcolor: 'rgb(255, 255, 255)',
+  	} // fine del layout
+	Plotly.newPlot(div_id, [func_graph], layout);
+	return document.getElementById(div_id);
+  };
+  
+  drawing.updatePlot = function (points) {
+	var markers = {
+		x: points.map(function (p) { return p[0]; }),
+		y: points.map(function (p) { return p[1]; }),
+		text: points.map(function (p, index) {
+	      return (index === 0)?"a":
+			     (index === 1)?"b":
+			     "x_" + (index - 2);
+		}),
+		mode: 'markers',
+		marker: {
+          color: 'rgb(102,166,30)',
+          size: 10,
+          opacity: 0.7
+        },
+		type: 'scatter',
+		name: 'Punti di valutazione'
+	};
+	Plotly.addTraces(document.plot, markers);
+  };
+  
+  var page = {};
+  page.displayPoints = function (points) {
+	var i = document.table.childNodes.length;
+	while(i--){
+		document.table.removeChild(document.table.lastChild);
+	}
+	for (var i = 0; i < points.length; i++) {
+		var tr = document.createElement('tr');
+		// Iterazione
+		var tdIter = document.createElement('td');
+		var nodeIter = document.createTextNode(i);
+		tdIter.appendChild(nodeIter);
+		tr.appendChild(tdIter);
+		// x
+		var tdX = document.createElement('td');
+		var nodeX = document.createTextNode(points[i][0]);
+		tdX.appendChild(nodeX);
+		tr.appendChild(tdX);
+		// Incertezza
+		var tdErr = document.createElement('td');
+		var nodeErr = document.createTextNode(points[i][2]);
+		tdErr.appendChild(nodeErr);
+		tr.appendChild(tdErr);
+		// f(x)
+		var tdFx = document.createElement('td');
+		var nodeFx = document.createTextNode(points[i][1]);
+		tdFx.appendChild(nodeFx);
+		tr.appendChild(tdFx);
+		// feval
+		var tdFeval = document.createElement('td');
+		var nodeFeval = document.createTextNode(points[i][3]);
+		tdFeval.appendChild(nodeFeval);
+		tr.appendChild(tdFeval);
+
+		document.table.appendChild(tr);
+	}
+  };
+  
+  /*
+   * Numerical methods
+   */
+  var num = {};
+  num.bisezione = function (f, a, b, criteria, points) {
+	var scope = { x: a };
+	var f_a = math.eval (f, scope);
+	var scope = { x: b };
+	var f_b = math.eval (f, scope);
+	
+	if (f_a * f_b > 0) {
+		console.log ("Intervallo mal definito");
+		return NaN;
+	}
+
+	var iter = -1;
+	var feval = 2;
+	var x;
+	var f_x;
+	var err = (b - a);
+	if (points == null)
+		points = [];
+	
+	points.push([a, f_a, err, feval]);
+	points.push([b, f_b, err, feval]);
+	
+	var terminate = function(x) {
+		// Termina se il numero di iterazioni massimo è stato raggiunto
+		if (criteria.maxiter && iter >= criteria.maxiter) {
+			console.log("Esco per maxiter", iter);
+			return true;
+		}
+		// Termina x_iter - x_(iter - 1) <= epsilon
+		if (criteria.eps_x && err <= criteria.eps_x) {
+			console.log("Esco per err", err);
+			return true;
+		}
+		// Termina f(x_iter) <= epsilon
+		if (criteria.eps_f && Math.abs(f_x) <= criteria.eps_f) {
+			console.log("Esco per f", f_x);
+			return true;
+		}
+		
+		return false;
+	};
+	do {
+		// calcola il punto centrale
+		x = (a + b) / 2;
+		err /= 2;
+		iter++;
+		scope = { x: x};
+		f_x = math.eval (f, scope);
+		feval++;
+		points.push([x, f_x, err, feval]);
+		// console.log(iter, a, b, x, f_a, f_b, f_x);
+		var test = f_x * f_a;
+		// Stesso segno: considera l'intervallo [x, b]
+		if (test > 0) {
+			a = x;
+			f_a = f_x;
+		}
+		// Segno opposto: considera l'intervallo [a, x]
+		else if (test < 0) {
+			b = x;
+			f_b = f_x;
+		}
+		// Prodotto nullo <- f(x) = 0
+		else break;
+	} while (!terminate());
+	
+	return x;
+  };
+  
+  function calcola() {
+    while (document.plot.data.length > 0)
+		Plotly.deleteTraces(document.plot, 0);
+	var f = document.getElementById('eq').value,
+	    a =Number(document.getElementById('a').value),
+        b = Number(document.getElementById('b').value),
+		plot = 'plot',
+		table = 'tab_iter',
+        criteria = {
+		  eps_f: Number(document.getElementById('v_eps_f').value),
+		  eps_x: Number(document.getElementById('v_eps_x').value),
+		  maxiter: Number(document.getElementById('max_iter').value)
+	    },
+		points = [],
+		x = num[document.getElementById("metodo").value] (f, a, b, criteria, points);
+	
+	drawing.draw(f, a, b);
+	drawing.updatePlot(points);
+	page.displayPoints(points);
+  };
+
+  document.getElementById('form').onsubmit = function (event) {
+    event.preventDefault();
+    calcola();
+  };
+
+  document.plot = drawing.draw(document.getElementById('eq').value, Number(document.getElementById('a').value), Number(document.getElementById('b').value));
+  document.table = document.getElementById('tab_iter');
+  </script>
+</body>
