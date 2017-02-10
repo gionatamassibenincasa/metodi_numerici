@@ -25,60 +25,70 @@
 <body>
 <form id="form">
   <div>
-      <label for="eq">La funzione <span id="fx"></span>:</label>
+      <label for="eq">La funzione <span id="l_fx"></span>:</label>
       <input type="text" id="eq" value="4 * sin(x) + 5 * cos(x/2)" />
-      L'intervallo di definizione <span id="intervallo"></span>
+      L'intervallo di definizione <span id="l_intervallo"></span>
       <label for="a">[</label>
       <input type="number" id="a" value="2" step="0.001" />
       <label for="b">, </label>
       <input type="number" id="b" value="4" step="0.001" />]
   </div>
   <div>
-    <label for="metodo">Il metodo per cercare <span id="alpha"></span></label>
+    <label for="metodo">Il metodo per cercare <span id="l_alpha"></span></label>
     <select name="metodo" id="metodo">
 	  <option value="bisezione" selected>Metodo dicotomico</option>
-	  <option value="Fibonacci">Metodo di Fibonacci</option>
+	  <option value="falsa_posizione">Metodo della falsa posizione</option>
 	  <option value="secanti">Metodo delle secanti</option>
 	  <option value="Newton">Metodo di Newton</option>
 	</select>
   </div>
   <div>
+	<label for="x0">Stima iniziale <span id="l_x0"></span></label>
+	<input type="number" id="x0" value="0" step="0.001" />
+  </div>
+  <div>
     I criteri di terminazione
 	<div>
 	  <div>
-	    <span id="eps_f"></span><input type="number" id="v_eps_f" value="0.000001" step="0.000001" />
+	    <label for="eps_f"><span id="l_eps_f"></span></label>
+		<input type="number" id="eps_f" value="0.000001" step="0.000001" />
 	  </div>
 	  <div>
-	    <span id="eps_x"></span><input type="number" id="v_eps_x" value="0.000001" step="0.000001" />
+	    <label for="eps_x"><span id="l_eps_x"></span></label>
+		<input type="number" id="eps_x" value="0.000001" step="0.000001" />
 	  </div>
 	  <div>
-	    <span id="iter"></span><input type="number" id="max_iter" value="50" step="1" min="0"/>
+	    <label for="iter"><span id="l_iter"></span></label>
+		<input type="number" id="max_iter" value="50" step="1" min="0"/>
 	  </div>
 	</div>
     
-  </div>  
+  </div>
   
   <input type="submit" value="Calcola" />
 </form>
 <script>
 katex.render(
-		'f(x) \\in \\mathcal{C}^0 [a, b],\\ f : x \\mapsto'
-	, document.getElementById('fx'));
+		'f(x) \\in \\mathcal{C}^0([a, b]),\\ f : x \\mapsto'
+	, document.getElementById('l_fx'));
 katex.render(
-	'[a, b] \\subset \\mathbb{R} = '
-	, document.getElementById('intervallo'));
+	'\\mathbb{R} \\supset [a, b] = '
+	, document.getElementById('l_intervallo'));
 katex.render(
 	'\\alpha \\in [a, b] \\subset \\mathbb{R}\\ |\\ f(\\alpha) = 0'
-	, document.getElementById('alpha'));
+	, document.getElementById('l_alpha'));
+katex.render(
+	'x_0 = '
+	, document.getElementById('l_x0'));
 katex.render(
 	'0 \\leq |f(x_k)| \\leq \\varepsilon_f,\\ \\varepsilon_f ='
-	, document.getElementById('eps_f'));
+	, document.getElementById('l_eps_f'));
 katex.render(
 	'0 \\leq |x_k - x_{k-1}| \\leq \\varepsilon_x,\\ \\varepsilon_x ='
-	, document.getElementById('eps_x'));
+	, document.getElementById('l_eps_x'));
 katex.render(
 	'0 \\leq k \\leq n,\\ n ='
-	, document.getElementById('iter'));
+	, document.getElementById('l_iter'));
 
 </script>
 
@@ -86,11 +96,13 @@ katex.render(
 
 <table id="dati">
   <thead>
-    <th>Iterazione</th>
-	<th>x</th>
-	<th>Incertezza</th>
-	<th>f(x)</th>
-	<th>Valutazioni</th>
+	<tr>
+		<th>Iterazione</th>
+		<th>x</th>
+		<th>Incertezza</th>
+		<th>f(x)</th>
+		<th>Valutazioni</th>
+	</tr>
   </thead>
   <tbody id="tab_iter">
   </tbody>
@@ -138,7 +150,7 @@ katex.render(
 		name: f
 	  };
 	  var title = "Metodo d";
-	  title += (document.getElementById('metodo').value === "secanti")?"elle secanti":("i " + document.getElementById('metodo').value);
+	  title += (document.getElementById('metodo').value === 'secanti')?'elle secanti':((document.getElementById('metodo').value === 'falsa_posizione')?'ella falsa posizione':('i ' + document.getElementById('metodo').value));
 	  var layout = {
 	  title: title,
 	  font: {
@@ -187,20 +199,45 @@ katex.render(
 	var new_samples = document.plot.data[0].x.length + x_axis.length,
 		new_x = new Array(new_samples),
 		new_y = new Array(new_samples);
-	var i = 0, j = 0, k = 0; 
-	while (k < new_samples - 1) {
-		while (i < document.plot.data[0].x.length && document.plot.data[0].x[i] <= ordered_points[j][0]) {
-			new_x[k] = document.plot.data[0].x[i];
-			new_y[k] = document.plot.data[0].y[i];
-			i++;
-			k++;
+	// I due vettori ordered_points e document.plot.data[0].x devono essere ordinati
+	var array = [ordered_points, document.plot.data[0].x];
+	for (var i = 0; i < array.length; i++) {
+		for (var j = 1; j < array[i].length; j++) {
+			if (array[i][j - 1] > array[i][j]) {
+				console.log(array[i], j-1, j, array[i][j - 1], array[i][j]);
+				debugger;
+			}
 		}
-		while (j < x_axis.length && document.plot.data[0].x[i] >= ordered_points[j][0]) {
+	}
+	// Fusione di document.plot.data[0].x e ordered_points
+	var i = 0, j = 0, k = 0; 
+	// Solo aliasing nomi
+	var ax = document.plot.data[0].x,
+		ay = document.plot.data[0].y;
+	while (i < ax.length && j < ordered_points.length) {
+		if ( ax[i] <= ordered_points[j][0]) {
+			new_x[k] = ax[i];
+			new_y[k] = ay[i];
+			i++;
+		} else {
+			new_x[k] = ordered_points[j][0];
+			new_y[k] = ordered_points[j][1];
+			j++;
+		}
+		k++;
+	}
+	while (i < ax.length) {
+		new_x[k] = ax[i];
+		new_y[k] = ay[i];
+		i++;
+		k++;
+	}
+		 
+	while (j < ordered_points.length) {
 			new_x[k] = ordered_points[j][0];
 			new_y[k] = ordered_points[j][1];
 			j++;
 			k++;
-		}
 	}
 	Plotly.deleteTraces(document.plot, 0);
 	Plotly.addTraces(document.plot, {x: new_x, y: new_y}, 0);
@@ -209,7 +246,7 @@ katex.render(
   };
   
   var page = {};
-  page.displayPoints = function (points) {
+  page.displayPoints = function (points, terminate) {
 	var i = document.table.childNodes.length;
 	while(i--){
 		document.table.removeChild(document.table.lastChild);
@@ -218,6 +255,7 @@ katex.render(
 		var tr = document.createElement('tr');
 		// Iterazione
 		var tdIter = document.createElement('td');
+		if (i == points.length -1 && terminate.maxiter) tdIter.style.color = 'red';
 		var nodeIter = document.createTextNode(i);
 		tdIter.appendChild(nodeIter);
 		tr.appendChild(tdIter);
@@ -228,11 +266,13 @@ katex.render(
 		tr.appendChild(tdX);
 		// Incertezza
 		var tdErr = document.createElement('td');
+		if (i == points.length -1 && terminate.x_accuracy) tdErr.style.color = 'red';
 		var nodeErr = document.createTextNode(points[i][2]);
 		tdErr.appendChild(nodeErr);
 		tr.appendChild(tdErr);
 		// f(x)
 		var tdFx = document.createElement('td');
+		if (i == points.length -1 && terminate.f_accuracy) tdFx.style.color = 'red';
 		var nodeFx = document.createTextNode(points[i][1]);
 		tdFx.appendChild(nodeFx);
 		tr.appendChild(tdFx);
@@ -250,11 +290,29 @@ katex.render(
    * Numerical methods
    */
   var num = {};
-  num.bisezione = function (f, a, b, criteria, points) {
-	var scope = { x: a };
-	var f_a = math.eval (f, scope);
-	var scope = { x: b };
-	var f_b = math.eval (f, scope);
+  num.terminate = function (criteria, iter, err, f_x, terminate) {
+		var ret = false;
+		// Termina se il numero di iterazioni massimo è stato raggiunto
+		if (criteria.maxiter && iter >= criteria.maxiter) {
+			terminate.maxiter = true;
+			ret = true;
+		}
+		// Termina x_iter - x_(iter - 1) <= epsilon
+		if (criteria.eps_x && err <= criteria.eps_x) {
+			terminate.x_accuracy = true;
+			ret = true;
+		}
+		// Termina f(x_iter) <= epsilon
+		if (criteria.eps_f && Math.abs(f_x) <= criteria.eps_f) {
+			terminate.f_accuracy = true;
+			ret = true;
+		}
+		
+		return ret;
+	};
+  num.bisezione = function (f, a, b, x0, criteria, points, terminate) {
+	var f_a = math.eval (f, { x: a });
+	var f_b = math.eval (f, { x: b });
 	
 	if (f_a * f_b > 0) {
 		console.log ("Intervallo mal definito");
@@ -271,36 +329,15 @@ katex.render(
 	
 	points.push([a, f_a, err, feval]);
 	points.push([b, f_b, err, feval]);
-	
-	var terminate = function(x) {
-		// Termina se il numero di iterazioni massimo � stato raggiunto
-		if (criteria.maxiter && iter >= criteria.maxiter) {
-			console.log("Esco per maxiter", iter);
-			return true;
-		}
-		// Termina x_iter - x_(iter - 1) <= epsilon
-		if (criteria.eps_x && err <= criteria.eps_x) {
-			console.log("Esco per err", err);
-			return true;
-		}
-		// Termina f(x_iter) <= epsilon
-		if (criteria.eps_f && Math.abs(f_x) <= criteria.eps_f) {
-			console.log("Esco per f", f_x);
-			return true;
-		}
-		
-		return false;
-	};
+
 	do {
 		// calcola il punto centrale
 		x = (a + b) / 2;
 		err /= 2;
 		iter++;
-		scope = { x: x};
-		f_x = math.eval (f, scope);
+		f_x = math.eval (f, { x: x });
 		feval++;
 		points.push([x, f_x, err, feval]);
-		// console.log(iter, a, b, x, f_a, f_b, f_x);
 		var test = f_x * f_a;
 		// Stesso segno: considera l'intervallo [x, b]
 		if (test > 0) {
@@ -314,10 +351,119 @@ katex.render(
 		}
 		// Prodotto nullo <- f(x) = 0
 		else break;
-	} while (!terminate());
+	} while (!num.terminate(criteria, iter, err, f_x, terminate));
 	
 	return x;
   };
+  
+  num.falsa_posizione = function (f, a, b, x0, criteria, points, terminate) {
+	var f_a = math.eval (f, {x: a});
+	var f_b = math.eval (f, {x: b});
+	
+	if (f_a * f_b > 0) {
+		console.log ("Intervallo mal definito");
+		return NaN;
+	}
+
+	var iter = -1;
+	var feval = 2;
+	var x;
+	var f_x;
+	var old_fx = 0;
+	var err = (b - a);
+	if (points == null)
+		points = [];
+
+	points.push([a, f_a, err, feval]);
+	points.push([b, f_b, err, feval]);
+	
+	do {
+		// calcola il punto in cui la retta passante per (x_a, f_a) e (x_b, f_b)
+		// interseca l'asse delle ascisse
+		x = (f_b * a - f_a * b) / (f_b - f_a);
+		iter++;
+		f_x = math.eval (f, {x: x});
+		feval++;
+		// console.log(iter, a, b, x, f_a, f_b, f_x);
+		var test = f_x * f_a;
+		// Stesso segno: considera l'intervallo [x, b]
+		if (test > 0) {
+			a = x;
+			f_a = f_x;
+			err = Math.abs((b - a));
+			points.push([x, f_x, err, feval]);
+			// Migliora convergenza
+			if (old_fx * f_x > 0)
+				f_a /= 2;
+		}
+		// Segno opposto: considera l'intervallo [a, x]
+		else if (test < 0) {
+			b = x;
+			f_b = f_x;
+			err = Math.abs((x - a));
+			points.push([x, f_x, err, feval]);
+			if (old_fx * f_x > 0)
+				f_b /= 2;
+		}
+		// Prodotto nullo <- f(x) = 0
+		else break;
+		
+		old_fx = f_x;
+	} while (!num.terminate(criteria, iter, err, f_x, terminate));
+	
+	return x;
+  }
+  
+  num.secanti = function (f, a, b, x0, criteria, points, terminate) {
+	var f_a = math.eval (f, {x: a});
+	var f_b = math.eval (f, {x: b});
+	
+	if (f_a * f_b > 0) {
+		console.log ("Intervallo mal definito");
+		return NaN;
+	}
+	var iter = -1;
+	var feval = 1;
+
+	// Solo per stimare un m iniziale
+	var f_x = math.eval (f, {x: x0});
+	var dx = 1E-5;
+	var m = (f_x - math.eval (f, {x: x0 + dx})) / dx;
+	var err = Infinity;
+	if (points == null)
+		points = [];
+	
+	points.push([x0, f_x, err, feval]);
+	do {
+		console.log(iter, x0, f_x, m);
+		x0 = x0 - f_x / m;
+		iter++;
+		f_x = math.eval (f, {x: x0});
+		feval++;
+		points.push([x0, f_x, err, feval]);
+	} while (!num.terminate(criteria, iter, err, f_x, terminate));
+	
+	return x0;
+  }
+  
+  num.Newton = function () {
+	var terminate = function(x) {
+		// Termina se il numero di iterazioni massimo 衳tato raggiunto
+		if (criteria.maxiter && iter >= criteria.maxiter) {
+			return true;
+		}
+		// Termina x_iter - x_(iter - 1) <= epsilon
+		if (criteria.eps_x && err <= criteria.eps_x) {
+			return true;
+		}
+		// Termina f(x_iter) <= epsilon
+		if (criteria.eps_f && Math.abs(f_x) <= criteria.eps_f) {
+			return true;
+		}
+		
+		return false;
+	};
+  }
   
   function calcola() {
     while (document.plot.data.length > 0)
@@ -325,19 +471,21 @@ katex.render(
 	var f = document.getElementById('eq').value,
 	    a =Number(document.getElementById('a').value),
         b = Number(document.getElementById('b').value),
+		x0 = Number(document.getElementById('x0').value),
 		plot = 'plot',
 		table = 'tab_iter',
         criteria = {
-		  eps_f: Number(document.getElementById('v_eps_f').value),
-		  eps_x: Number(document.getElementById('v_eps_x').value),
+		  eps_f: Number(document.getElementById('eps_f').value),
+		  eps_x: Number(document.getElementById('eps_x').value),
 		  maxiter: Number(document.getElementById('max_iter').value)
 	    },
 		points = [],
-		x = num[document.getElementById("metodo").value] (f, a, b, criteria, points);
+		terminate = {},
+		x = num[document.getElementById("metodo").value] (f, a, b, x0, criteria, points, terminate);
 	
 	drawing.draw(f, a, b);
 	drawing.updatePlot(points);
-	page.displayPoints(points);
+	page.displayPoints(points, terminate);
   };
 
   document.getElementById('form').onsubmit = function (event) {
