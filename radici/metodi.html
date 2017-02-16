@@ -147,7 +147,7 @@ katex.render(
 		x: x_samples,
 		y: y_samples,
 		type: 'scatter',
-		name: f
+		name: 'f : x -> ' + f
 	  };
 	  var title = "Metodo d";
 	  title += (document.getElementById('metodo').value === 'secanti')?'elle secanti':((document.getElementById('metodo').value === 'falsa_posizione')?'ella falsa posizione':('i ' + document.getElementById('metodo').value));
@@ -175,44 +175,19 @@ katex.render(
 	return document.getElementById(div_id);
   };
   
-  drawing.updatePlot = function (points) {
+  drawing.updatePlot = function (points, f) {
     var x_axis = points.map(function (p) { return p[0]; }),
 	    y_axis = points.map(function (p) { return p[1]; }),
-	    markers = {
-		x: x_axis,
-		y: y_axis,
-		text: points.map(function (p, index) {
-	      return (index === 0)?"a":
-			     (index === 1)?"b":
-			     "x_" + (index - 2);
-		}),
-		mode: 'markers',
-		marker: {
-          color: 'rgb(102,166,30)',
-          size: 10,
-          opacity: 0.7
-        },
-		type: 'scatter',
-		name: 'Punti di valutazione'
-	};
-	var ordered_points = points.slice().sort();
-	var new_samples = document.plot.data[0].x.length + x_axis.length,
+	    ordered_points = points.slice().sort(),
+	    new_samples = document.plot.data[0].x.length + x_axis.length,
 		new_x = new Array(new_samples),
-		new_y = new Array(new_samples);
-	// I due vettori ordered_points e document.plot.data[0].x devono essere ordinati
-	var array = [ordered_points, document.plot.data[0].x];
-	for (var i = 0; i < array.length; i++) {
-		for (var j = 1; j < array[i].length; j++) {
-			if (array[i][j - 1] > array[i][j]) {
-				console.log(array[i], j-1, j, array[i][j - 1], array[i][j]);
-				debugger;
-			}
-		}
-	}
-	// Fusione di document.plot.data[0].x e ordered_points
-	var i = 0, j = 0, k = 0; 
-	// Solo aliasing nomi
-	var ax = document.plot.data[0].x,
+		new_y = new Array(new_samples),
+	    // I due vettori ordered_points e document.plot.data[0].x devono essere ordinati
+	    array = [ordered_points, document.plot.data[0].x],
+		// Fusione di document.plot.data[0].x e ordered_points
+	    i = 0, j = 0, k = 0,
+	    // Solo aliasing nomi
+	    ax = document.plot.data[0].x,
 		ay = document.plot.data[0].y;
 	while (i < ax.length && j < ordered_points.length) {
 		if ( ax[i] <= ordered_points[j][0]) {
@@ -231,8 +206,7 @@ katex.render(
 		new_y[k] = ay[i];
 		i++;
 		k++;
-	}
-		 
+	} 
 	while (j < ordered_points.length) {
 			new_x[k] = ordered_points[j][0];
 			new_y[k] = ordered_points[j][1];
@@ -240,9 +214,31 @@ katex.render(
 			k++;
 	}
 	Plotly.deleteTraces(document.plot, 0);
-	Plotly.addTraces(document.plot, {x: new_x, y: new_y}, 0);
-	//Plotly.extendTraces(document.plot, {x: x_axis, y: y_axis}, [0]);
-	Plotly.addTraces(document.plot, markers);
+	Plotly.addTraces(document.plot, 
+		{
+			x: new_x,
+			y: new_y,
+			type: 'scatter',
+			name: 'f : x -> ' + f
+		}, 0);
+	points.forEach(function (point, index) {
+		var point_name = (index === 0)?"a":(index === 1)?"b":"x_" + (index - 2),
+		    marker = {
+			  x: [point[0]],
+			  y: [point[1]],
+			  text: point_name,
+			  mode: 'markers',
+			  marker: {
+			    color: 'rgb(102,166,30)',
+			    size: 10,
+			    opacity: 0.7
+			  },
+			  type: 'scatter',
+			  name: '' + point_name
+			};
+		Plotly.addTraces(document.plot, marker);
+		// console.log(marker);
+	});
   };
   
   var page = {};
@@ -310,6 +306,36 @@ katex.render(
 		
 		return ret;
 	};
+	
+	num.derivata = function (f) {
+		return function (x) {
+			var h = (x === 0)?
+					Math.sqrt(Number.EPSILON):
+					Math.sqrt(Number.EPSILON)*x,
+				xph = x + h,
+				dx =  xph - x,
+				diff = math.eval (f, { x: xph }) - math.eval (f, { x: x });
+
+			return diff / dx;
+		};
+	};
+
+    num.derivata8 = function (f) {
+        return function (x) {
+			const c = [1/280, -4/105, 1/5, -4/5, 0, 4/5, -1/5, 4/105, -1/280];
+			var h = (x === 0)?
+					Math.sqrt(Number.EPSILON):
+					Math.sqrt(Number.EPSILON)*x,
+				xph = x + h,
+				dx =  xph - x,
+				numeratore = 0;
+			for (var j = -4; j <= 4; j++)
+				numeratore += c[j+4] * math.eval (f, { x: x + j * h });
+
+			return numeratore / dx;
+        };
+    };
+  
   num.bisezione = function (f, a, b, x0, criteria, points, terminate) {
 	var f_a = math.eval (f, { x: a });
 	var f_b = math.eval (f, { x: b });
@@ -427,15 +453,13 @@ katex.render(
 
 	// Solo per stimare un m iniziale
 	var f_x = math.eval (f, {x: x0});
-	var dx = 1E-5;
-	var m = (f_x - math.eval (f, {x: x0 + dx})) / dx;
+	var m = (f_b - f_a) / (b - a);
 	var err = Infinity;
 	if (points == null)
 		points = [];
 	
 	points.push([x0, f_x, err, feval]);
 	do {
-		console.log(iter, x0, f_x, m);
 		x0 = x0 - f_x / m;
 		iter++;
 		f_x = math.eval (f, {x: x0});
@@ -446,23 +470,36 @@ katex.render(
 	return x0;
   }
   
-  num.Newton = function () {
-	var terminate = function(x) {
-		// Termina se il numero di iterazioni massimo 衳tato raggiunto
-		if (criteria.maxiter && iter >= criteria.maxiter) {
-			return true;
-		}
-		// Termina x_iter - x_(iter - 1) <= epsilon
-		if (criteria.eps_x && err <= criteria.eps_x) {
-			return true;
-		}
-		// Termina f(x_iter) <= epsilon
-		if (criteria.eps_f && Math.abs(f_x) <= criteria.eps_f) {
-			return true;
-		}
-		
-		return false;
-	};
+  num.Newton = function (f, a, b, x0, criteria, points, terminate) {
+	var f_a = math.eval (f, {x: a});
+	var f_b = math.eval (f, {x: b});
+	
+	if (f_a * f_b > 0) {
+		console.log ("Intervallo mal definito");
+		return NaN;
+	}
+	var iter = -1;
+	var feval = 1;
+
+	// Solo per stimare un m iniziale
+	var f_x = math.eval (f, {x: x0});
+	var err = Infinity;
+	if (points == null)
+		points = [];
+	var f_prime = num.derivata(f);
+	points.push([x0, f_x, err, feval]);
+	do {
+		var m = f_prime (x0);
+		x0 = x0 - f_x / m;
+		x0 = x0 - f_x / m;
+		iter++;
+		f_x = math.eval (f, {x: x0});
+		feval++;
+		points.push([x0, f_x, err, feval]);
+	} while (!num.terminate(criteria, iter, err, f_x, terminate));
+	
+	return x0;
+	
   }
   
   function calcola() {
@@ -484,7 +521,7 @@ katex.render(
 		x = num[document.getElementById("metodo").value] (f, a, b, x0, criteria, points, terminate);
 	
 	drawing.draw(f, a, b);
-	drawing.updatePlot(points);
+	drawing.updatePlot(points, f);
 	page.displayPoints(points, terminate);
   };
 
