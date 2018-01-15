@@ -1,0 +1,73 @@
+
+    <p>Si consideri la funzione:</p>
+    <p id="funzione_latex">\( f(x) = x^{8} - 2 \)</p>
+    <p>Si determini un'approssimazione della radice &alpha; eseguendo 5 iterazioni del metodo dicotomico con intervallo iniziale \( [ 0, 2 ]\) e si registrino i passaggi nella tabella seguente.<br>Si scrivano almeno le prime 5 cifre significative.</p>
+
+    <table style="border: 1px solid black; border-collapse:collapse;">
+        <caption>Iterazioni del metodo dicotomico</caption>
+        <thead>
+            <tr>
+                <th style="border: 1px solid black;">\(k\)</th>
+                <th style="border: 1px solid black;">\(a_k\)</th>
+                <th style="border: 1px solid black;">\(b_k\)</th>
+                <th style="border: 1px solid black;">\(x_k\)</th>
+                <th style="border: 1px solid black;">\(\text{sgn}\left(f(a_k)\right)\)</th>
+                <th style="border: 1px solid black;">\(\text{sgn}\left(f(b_k)\right)\)</th>
+                <th style="border: 1px solid black;">\(\text{sgn}\left(f(x_k)\right)\)</th>
+                <th style="border: 1px solid black;">\(|b_k - a_k|\)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid black;">0</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=0:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=2:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1:0.0001}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=2:0.0001}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid black;">1</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=2:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.5:0.0001}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1:0.0001}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid black;">2</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.5:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.25:0.0001}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=0.5:0.0001}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid black;">3</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.25:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.125:0.0001}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=0.25:0.0001}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid black;">4</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.125:0.0001}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=1.0625:0.0001}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:-1~0~=+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:=-1~0~+1}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:=0.125:0.0001}</td>
+            </tr>
+        </tbody>
+    </table>
+

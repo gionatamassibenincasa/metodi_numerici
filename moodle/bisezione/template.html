@@ -1,0 +1,35 @@
+<script id="cloze-template" type="text/x-handlebars-template">
+    <p>Si consideri la funzione:</p>
+    <p id="funzione_latex">\( {{{ f_latex }}} \)</p>
+    <p>Si determini un'approssimazione della radice &alpha; eseguendo {{ iterazioni }} iterazioni del metodo dicotomico con intervallo iniziale \( [ {{a}}, {{b}} ]\) e si registrino i passaggi nella tabella seguente.<br>Si scrivano almeno le prime {{cifre_significative}} cifre significative.</p>
+
+    <table style="border: 1px solid black; border-collapse:collapse;">
+        <caption>Iterazioni del metodo dicotomico</caption>
+        <thead>
+            <tr>
+                <th style="border: 1px solid black;">\(k\)</th>
+                <th style="border: 1px solid black;">\(a_k\)</th>
+                <th style="border: 1px solid black;">\(b_k\)</th>
+                <th style="border: 1px solid black;">\(x_k\)</th>
+                <th style="border: 1px solid black;">\(\text{sgn}\left(f(a_k)\right)\)</th>
+                <th style="border: 1px solid black;">\(\text{sgn}\left(f(b_k)\right)\)</th>
+                <th style="border: 1px solid black;">\(\text{sgn}\left(f(x_k)\right)\)</th>
+                <th style="border: 1px solid black;">\(|b_k - a_k|\)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each iterata}}
+            <tr>
+                <td style="border: 1px solid black;">{{ k }}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:={{ a }}:{{ delta_a }} }</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:={{ b }}:{{ delta_b }} }</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:={{ x }}:{{ delta_x }} }</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:{{{fa_neg}}}-1~{{{fa_nul}}}0~{{{fa_pos}}}+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:{{{fb_neg}}}-1~{{{fb_nul}}}0~{{{fb_pos}}}+1}</td>
+                <td style="border: 1px solid black;">{:MULTICHOICE:{{{fx_neg}}}-1~{{{fx_nul}}}0~{{{fx_pos}}}+1}</td>
+                <td style="border: 1px solid black;">{:NUMERICAL:={{ e }}:{{ delta_e }} }</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</script>
