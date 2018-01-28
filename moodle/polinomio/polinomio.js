@@ -1,10 +1,60 @@
 'use strict';
 
-let grado = (c) => {
-    if (c.length == 0) {
-        return -Infinity;
+const INF = 9999;
+
+let stringa = (coeff, testo_iniziale = '') => {
+    if (coeff.length === 0) {
+        return testo_iniziale + '0';
     }
-    return c.length - 1;
+
+    return coeff.reduceRight(function (str, c, k, arr) {
+        if (c === 0) {
+            return str;
+        }
+        // Se coefficiente non di grado massimo allora usa simbolo di somma (+ o -)
+        if (k !== arr.length - 1) {
+            if (c > 0) {
+                str += ' + ';
+            } else {
+                str += ' - ';
+                c = -c;
+            }
+        } else {
+            if (c == -1) {
+                if (k > 1) {
+                    return str += '-x^' + k;
+                } else if (k === 1) {
+                    return str += '-x';
+                } else if (k === 0) {
+                    return str + c;
+                }
+            }
+        }
+        if (k > 1) {
+            if (c !== 1) {
+                str += c + ' ';
+            }
+            str += 'x^' + k;
+        } else if (k == 1) {
+            if (c !== 1) {
+                str += c + ' ';
+            }
+            str += 'x';
+        } else {
+            str += c;
+        }
+        return str;
+    }, testo_iniziale);
+};
+
+
+let grado = (c) => {
+    for (let j = c.length - 1; j >= 0; j--) {
+        if (c[j] !== undefined && c[j] !== 0) {
+            return j;
+        }
+    }
+    return -INF;
 };
 
 let valuta = (c) => {
@@ -71,10 +121,11 @@ let sottrai = (a, b) => {
 let moltiplica = (a, b) => {
     let grado_a = grado(a),
         grado_b = grado(b);
-    if (a.length === 0 || b.length === 0) {
+    if (grado_a < 0 || grado_b < 0) {
         return [];
     }
-    let c = new Array(grado_a + grado_b + 1).fill(0);
+    let nuovo_grado = grado_a + grado_b + 1;
+    let c = new Array(nuovo_grado).fill(0);
     for (let i = 0; i <= grado_a; i++) {
         for (let j = 0; j <= grado_b; j++) {
             c[i + j] += a[i] * b[j];
@@ -84,53 +135,25 @@ let moltiplica = (a, b) => {
 };
 
 let dividi = (num, den) => {
-    // q quoziente
-    // r resto
-    if (grado(den) > grado(num)) {
+    let grado_den = grado(den),
+        grado_num = grado(num),
+        coeff_grado_max_den = den[grado_den];
+    if (grado_num < grado_den) {
         return {
-            q: [],
-            r: c2
+            quoziente: [],
+            resto: num
         };
     }
-    let q = new Array(grado(num) - grado(den) + 1);
-    while (grado(num) >= grado(den)) {
-        let g_num = grado(num),
-            g_den = grado(den),
-            i = g_num - g_den;
-        q[i] = num[g_num] / den[g_den];
+    let ret = {
+        quoziente: new Array(grado_num - grado_den + 1).fill(0),
+        resto: num
+    };
+    for (let i = grado_num - grado_den; i >= 0; i--) {
+        ret.quoziente[i] = ret.resto[grado_num] / coeff_grado_max_den;
+        ret.resto = sottrai(num, moltiplica(ret.quoziente, den));
+        grado_num--;
     }
-};
-
-let stringa = (coeff, testo_iniziale = '') => {
-    if (coeff.length === 0) {
-        return testo_iniziale + '0';
-    }
-
-    return coeff.reduceRight(function (str, c, k, arr) {
-        // Se coefficiente non di grado massimo allora usa simbolo di somma (+ o -)
-        if (k !== arr.length - 1) {
-            if (c > 0) {
-                str += ' + ';
-            } else {
-                str += ' - ';
-                c = -c;
-            }
-        }
-        if (k > 1) {
-            if (c !== 1) {
-                str += c + ' ';
-            }
-            str += 'x^' + k;
-        } else if (k == 1) {
-            if (c !== 1) {
-                str += c + ' ';
-            }
-            str += 'x';
-        } else {
-            str += c;
-        }
-        return str;
-    }, testo_iniziale);
+    return ret;
 };
 
 let genera_casuale = (grado) => {
@@ -158,6 +181,7 @@ let genera_esercizio = (coeff) => {
 };
 
 
+exports.grado = grado;
 exports.riduci = riduci;
 exports.stringa = stringa;
 exports.valuta = valuta;
@@ -166,5 +190,5 @@ exports.aggiungi = aggiungi;
 exports.sottrai = sottrai;
 exports.nega = nega;
 exports.moltiplica = moltiplica;
-
-// console.log(genera_esercizio(genera_casuale(4)));
+exports.dividi = dividi;
+exports.INF = INF;

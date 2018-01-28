@@ -31,5 +31,11 @@ describe('Scrittura di polinomi TeX-compatibile', () => {
         it('stringa([5, 4, 3, 2, 1]) should be \'x^4 + 2 x^3 + 3 x^2 + 4 x + 5\'', () => {
             expect(polinomio.stringa([5, 4, 3, 2, 1], '')).to.equal('x^4 + 2 x^3 + 3 x^2 + 4 x + 5');
         });
+        it('stringa([1, 0, 1]) should be \'x^2 + 1\'', () => {
+            expect(polinomio.stringa([1, 0, 1])).to.equal('x^2 + 1');
+        });
+        it('stringa([0, -1]) should be \'-x\'', () => {
+            expect(polinomio.stringa([0, -1])).to.equal('-x');
+        });
     })
 })
