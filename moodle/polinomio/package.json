@@ -1,0 +1,16 @@
+{
+    "name": "polinomio",
+    "version": "1.0.0",
+    "description": "",
+    "main": "polinomio.js",
+    "scripts": {
+        "test": "mocha tests/**/**.spec.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "chai": "^4.1.2",
+        "mocha": "^5.0.0"
+    }
+}
