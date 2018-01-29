@@ -81,6 +81,9 @@ let riduci = (c) => {
 };
 
 let deriva = (c) => {
+    if (c.length === 0) {
+        return [];
+    }
     let c1 = new Array(c.length - 1);
     for (let i = 1; i < c.length; i++) {
         c1[i - 1] = c[i] * i;
@@ -156,6 +159,118 @@ let dividi = (num, den) => {
     return ret;
 };
 
+let sequenza_sturm = (p) => {
+    let seq = [];
+    seq.push(p);
+    seq.push(deriva(p));
+    for (let j = 1;; j++) {
+        let r = dividi(seq[j - 1], seq[j]).resto;
+        if (grado(r) < 0) {
+            break;
+        }
+        seq.push(nega(r));
+    }
+    return seq;
+};
+
+let numero_radici_reali = (p, a, b) => {
+    let seq = sequenza_sturm(p);
+    let n = grado(p);
+    if (a === undefined && b === undefined) {
+        let rho_2 = rho_1;
+        for (let k = 0; k < n; k++) {
+            let r = 1 + Math.abs(p[k] / p[n]);
+            if (r > rho_2) {
+                rho_2 = r;
+            }
+        }
+        a = -rho_2;
+        b = rho_2;
+    }
+
+    let f_m = seq.map(p => valuta(p)(a));
+    let f_p = seq.map(p => valuta(p)(b));
+    let variazioni = (s) => {
+        let prec = s[0];
+        let nvar = 0;
+        for (let i = 0; i < s.length; i++) {
+            if (s[i] < 3 * Math.EPSILON) {
+                continue;
+            }
+            if (s[i] * prec < 0) {
+                nvar++;
+            }
+            prec = s[i];
+        }
+        return nvar;
+    }
+    return variazioni(f_m) - variazioni(f_p);
+}
+
+let intervallo_radici_reali = (p) => {
+    let seq = sequenza_sturm(p);
+    let n = grado(p);
+    let rho_1 = Math.pow(Math.abs(p[0] / p[n]), 1 / n);
+    if (p[1]) {
+        let rho_1a = n * Math.abs(p[0] / p[1]);
+        rho_1 = Math.min(rho_1, rho_1a);
+    }
+    let rho_2 = rho_1;
+    for (let k = 0; k < n; k++) {
+        let r = 1 + Math.abs(p[k] / p[n]);
+        if (r > rho_2) {
+            rho_2 = r;
+        }
+    }
+    let f_m = seq.map(p => valuta(p)(-rho_2));
+    let f_p = seq.map(p => valuta(p)(rho_2));
+    let variazioni = (s) => {
+        let prec = s[0];
+        let nvar = 0;
+        for (let i = 0; i < s.length; i++) {
+            if (s[i] < 3 * Math.EPSILON) {
+                continue;
+            }
+            if (s[i] * prec < 0) {
+                nvar++;
+            }
+            prec = s[i];
+        }
+        return nvar;
+    }
+    let n_radici = variazioni(f_m) - variazioni(f_p);
+    let sinistra = -rho_2;
+    let destra = sinistra + rho_2 / n_radici;
+    let incertezza = destra - sinistra;
+    let intervalli = [];
+    let fine = false;
+    for (let restanti = n_radici; restanti >= 0 && !fine;) {
+        let nr = numero_radici_reali(p, sinistra, destra);
+        console.log(sinistra, destra, incertezza, nr);
+        if (nr > 1) {
+            incertezza /= 2;
+            destra -= incertezza;
+        } else if (nr === 0) {
+            destra = Math.min(destra + incertezza, rho_2);
+            if (destra >= rho_2 - 1E-5) {
+                fine = true;
+            }
+        } else if (nr === 1) {
+            let ab = {
+                destra: destra,
+                sinistra: sinistra,
+                incertezza: destra - sinistra
+            };
+            intervalli.push(ab);
+            restanti--;
+            sinistra = destra;
+            destra = sinistra + rho_2 / n_radici;
+            incertezza = destra - sinistra;
+        }
+    }
+    return intervalli;
+};
+
 let genera_casuale = (grado) => {
     let generaInteroTra = (m, M) => {
         return Math.floor(Math.random() * (M - m + 1) + m);
@@ -168,7 +283,6 @@ let genera_casuale = (grado) => {
     return coeff;
 };
 
-
 let genera_esercizio = (coeff) => {
     let esercizio = {
         nome: "newton_polival_" + coeff.toString().replace(/,/g, '_'),
@@ -180,7 +294,6 @@ let genera_esercizio = (coeff) => {
     return esercizio;
 };
 
-
 exports.grado = grado;
 exports.riduci = riduci;
 exports.stringa = stringa;
@@ -191,4 +304,16 @@ exports.sottrai = sottrai;
 exports.nega = nega;
 exports.moltiplica = moltiplica;
 exports.dividi = dividi;
+exports.numero_radici_reali = numero_radici_reali;
 exports.INF = INF;
+
+
+let newton = (p, x) => {
+    let p1 = deriva(p);
+    console.log(x);
+    for (let iter = 0; iter < 10; iter++) {
+        x = x - valuta(p)(x) / valuta(p1)(x);
+        console.log(x, valuta(p)(x), valuta(p1)(x));
+    }
+    return x;
+};
