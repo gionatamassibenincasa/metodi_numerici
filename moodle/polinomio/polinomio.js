@@ -154,6 +154,9 @@ let dividi = (num, den) => {
         ret.quoziente[i] = ret.resto[grado_num] / coeff_grado_max_den;
         ret.resto = sottrai(num, moltiplica(ret.quoziente, den));
         grado_num--;
+        while (grado(ret.resto) > grado_num) {
+            ret.resto.pop();
+        }
     }
     return ret;
 };
@@ -163,12 +166,14 @@ let sequenza_sturm = (p) => {
     seq.push(p);
     seq.push(deriva(p));
     for (let j = 1;; j++) {
-        let r = dividi(seq[j - 1], seq[j]).resto;
+        let qr = dividi(seq[j - 1], seq[j]);
+        let r = qr.resto;
         if (grado(r) < 0) {
             break;
         }
         seq.push(nega(r));
     }
+
     return seq;
 };
 
@@ -238,20 +243,25 @@ let intervallo_radici_reali = (p) => {
         return nvar;
     }
     let n_radici = variazioni(f_m) - variazioni(f_p);
+    let intervalli = [];
+    if (n_radici === 0) {
+        return intervalli;
+    }
     let sinistra = -rho_2;
     let destra = sinistra + rho_2 / n_radici;
     let incertezza = destra - sinistra;
-    let intervalli = [];
     let fine = false;
     for (let restanti = n_radici; restanti >= 0 && !fine;) {
         let nr = numero_radici_reali(p, sinistra, destra);
-        console.log(sinistra, destra, incertezza, nr);
         if (nr > 1) {
             incertezza /= 2;
             destra -= incertezza;
         } else if (nr === 0) {
             destra = Math.min(destra + incertezza, rho_2);
             if (destra >= rho_2 - 1E-5) {
+                fine = true;
+            }
+            if (incertezza > 1E5) {
                 fine = true;
             }
         } else if (nr === 1) {
@@ -270,29 +280,6 @@ let intervallo_radici_reali = (p) => {
     return intervalli;
 };
 
-let genera_casuale = (grado) => {
-    let generaInteroTra = (m, M) => {
-        return Math.floor(Math.random() * (M - m + 1) + m);
-    };
-    let coeff = new Array(grado + 1);
-    for (let i = 0; i <= grado; i++) {
-        coeff[i] = generaInteroTra(1, 5);
-    }
-
-    return coeff;
-};
-
-let genera_esercizio = (coeff) => {
-    let esercizio = {
-        nome: "newton_polival_" + coeff.toString().replace(/,/g, '_'),
-        f_latex: stringa(coeff, "f(x) = "),
-        f1_latex: stringa(deriva(coeff), "f(x) = "),
-        f: (x) => valuta(coeff),
-        f1: (x) => valuta(deriva(coeff))
-    };
-    return esercizio;
-};
-
 exports.grado = grado;
 exports.riduci = riduci;
 exports.stringa = stringa;
@@ -304,15 +291,5 @@ exports.nega = nega;
 exports.moltiplica = moltiplica;
 exports.dividi = dividi;
 exports.numero_radici_reali = numero_radici_reali;
+exports.intervallo_radici_reali = intervallo_radici_reali;
 exports.INF = INF;
-
-
-let newton = (p, x) => {
-    let p1 = deriva(p);
-    console.log(x);
-    for (let iter = 0; iter < 10; iter++) {
-        x = x - valuta(p)(x) / valuta(p1)(x);
-        console.log(x, valuta(p)(x), valuta(p1)(x));
-    }
-    return x;
-};
