@@ -59,13 +59,12 @@ let grado = (c) => {
 
 let valuta = (c) => {
     return function (x) {
-        let ret = 0;
-        let p = 1;
-        for (let i = 0; i < c.length; i++) {
-            ret += c[i] * p;
-            p *= x;
+        let i = c.length - 1;
+        let b = c[i];
+        for (i = i - 1; i >= 0; i--) {
+            b = c[i] + b * x;
         }
-        return ret;
+        return b;
     };
 };
 
